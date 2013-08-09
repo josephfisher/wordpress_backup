@@ -4,8 +4,8 @@
 # description     :This script will make a backup of a wordpress site, upload
 #                 :via FTPS, and email a contact if any part of this fails.
 # author          :Joseph Fisher, jpf@josephfisher.us
-# date            :2013-08-07
-# version         :1.0
+# date            :2013-08-08
+# version         :1.0.1
 # usage           :bash wordpress_backup.sh
 # notes           :Modify the environment variables listed below to suit your
 #                 :enviornment, requirements, etc.
