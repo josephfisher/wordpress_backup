@@ -148,7 +148,7 @@ fi
 #
 #
 # Using LFTP, we'll upload the backup that we just created to your FTPS server
-${LFTP} -e "mirror -R ${BACKUPS_DIRECTORY} /${FTPS_REMOTE_DIR}" -u ${FTPS_USER},${FTPS_PASSWORD} ${FTPS_SERVER}:${FTPS_PORT}
+${LFTP} -e "mirror -R ${BACKUP_DIRECTORY} /${FTPS_REMOTE_DIR}" -u ${FTPS_USER},${FTPS_PASSWORD} ${FTPS_SERVER}:${FTPS_PORT}
 #
 # If the upload failed, email your contact
 if [ $? -ne 0 ];
