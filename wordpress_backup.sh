@@ -4,12 +4,12 @@
 # description     :This script will make a backup of a wordpress site, upload
 #                 :via FTPS, and email a contact if any part of this fails.
 # author          :Joseph Fisher, jpf@josephfisher.us
-# date            :2013-08-08
-# version         :1.0.1
+# date            :2013-08-15
+# version         :1.0.2
 # usage           :bash wordpress_backup.sh
 # notes           :Modify the environment variables listed below to suit your
 #                 :enviornment, requirements, etc.
-# dependencies    :MySQL, Wordpress, lftp (lftp.yar.ru), mailx, mkdir, mv, echo
+# dependencies    :MySQL, Wordpress, curl, mailx, mkdir, mv, echo
 #                 :tar, rm, mysqldump
 # License         :Copyright (C) 2013 Joseph Fisher
 #
@@ -67,35 +67,17 @@ SERVER_NAME="servername"
 # BACKUP_DIRECTORY="/var/backups"
 BACKUP_DIRECTORY="/var/backups"
 #
-# How many days should we archive the backups locally?
-# (Note that this is not on the remote FTPS server)
-LOCAL_BKUP_DAYS="5"
-# Note that if we fail any step prior to the FTPS upload, this script will NOT
-# clean up old files in your backup directory.
-#
 #==============================================================================
 # These settings may only need to be changed if you have an oddball environment
 #==============================================================================
-# This is the location of lftp
-LFTP="/usr/bin/lftp"
-#
-# This is the location of tar
+# These are the locations of various applications
 TAR="/bin/tar"
-#
-# This is the location of MySQLDump
 MYSQLDUMP="/usr/bin/mysqldump"
-#
-# This is the location of the mailx application
 MAIL="/bin/mail"
-#
-# This is the location of mkdir
 MKDIR="/bin/mkdir"
-#
-# This is the location of echo
 ECHO="/bin/echo"
-#
-# This is the lcoation of RM
 RM="/bin/rm"
+CURL="/usr/bin/curl"
 #
 #==============================================================================
 # DO NOT MODIFY BELOW THIS LINE
@@ -147,19 +129,15 @@ exit 3
 fi
 #
 #
-# Using LFTP, we'll upload the backup that we just created to your FTPS server
-${LFTP} -e "mirror -R ${BACKUP_DIRECTORY} /${FTPS_REMOTE_DIR}" -u ${FTPS_USER},${FTPS_PASSWORD} ${FTPS_SERVER}:${FTPS_PORT} << EOF
-quit
-EOF
+# Using curl, we'll upload the backup that we just created to your FTPS server.
+# Once the upload is complete, we'll delete the backup.
+for i in `find /${BACKUP_DIRECTORY}/${BACKUP_SUBDIR} -type f | xargs -i basename {}`; do ${CURL} -k --ftp-ssl --ftp-pasv -T /${BACKUP_DIRECTORY}/${BACKUP_SUBDIR}/$i ftp://${FTPS_USER}:${FTPS_PASSWORD}@${FTPS_SERVER}:${FTPS_PORT}/${FTPS_REMOTE_DIR}/;rm -f /${BACKUP_DIRECTORY}/${BACKUP_SUBDIR}/$i;done
 #
 # If the upload failed, email your contact
 if [ $? -ne 0 ];
 then
 ${MAIL} -r ${EMAIL_FROM_ADDR} -s "${SERVER_NAME} Failed to Upload your Backup to ${FTPS_SERVER}" ${EMAIL_ALERT_ADDR} < /tmp/message.txt
 fi
-#
-#
-find ${BACKUP_DIRECTORY} -mtime +"${LOCAL_BKUP_DAYS}" -exec ${RM} -rf {} \;
 #
 #
 ${RM} /tmp/$DB_NAME
